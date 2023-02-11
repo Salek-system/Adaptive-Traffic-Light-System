@@ -2,7 +2,7 @@
 
 
 
-#Requirments:
+# Requirments:
 To run this project, you need to do is:
 First, download the labeled dataset.
 Second, use google colab for training the dataset.
