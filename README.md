@@ -1,6 +1,13 @@
 # Yolov5-detect-emergency
 
 
+
+#Requirments:
+To run this project, you need to do is:
+First, download the labeled dataset.
+Second, use google colab for training the dataset.
+Third, use Jupyter notebook for testing the code locally.
+
 # File structure: 
 - [dataset](dataset) In this file, we display the dataset used in the project, divided into images of emergency vehicles and non-emergency vehicles.
 - [README.dataset.txt](README.dataset.txt) Here is our training dataset in Roboflow with labeled photos.
