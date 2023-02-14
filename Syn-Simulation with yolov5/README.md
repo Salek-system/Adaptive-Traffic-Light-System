@@ -3,9 +3,7 @@
 ## About The Project
 
 A traffic simulator implemented in Python using pygame.
-
-To learn more about how the project was created check out this [article](https://towardsdatascience.com/simulating-traffic-flow-in-python-ee1eab4dd20f).
-on Medium.
+We learned more about how the project was created through this [article](https://towardsdatascience.com/simulating-traffic-flow-in-python-ee1eab4dd20f).
 
 ## Getting Started
 
@@ -19,14 +17,4 @@ Simply put the `trafficSimulator` folder in the same path as your file, Then use
 
 ## Documentation
 
-The documentation process for this project has not started yet.
-
-If you want to contribute, check how to contribute below.
-
-## Contributing
-
-Your contributions are always welcome! Please have a look at the [contribution guidelines](https://github.com/BilHim/trafficSimulator/blob/main/CONTRIBUTING.md) first.
-
-## Licensing
-
-Check the project license [here](https://github.com/BilHim/trafficSimulator/blob/main/LICENSE.md).
+The files in this part include synchronization and emergency module files, which means that uploading the files here means the project integration together.
