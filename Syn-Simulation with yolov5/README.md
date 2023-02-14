@@ -18,3 +18,6 @@ Simply put the `trafficSimulator` folder in the same path as your file, Then use
 ## Documentation
 
 The files in this part include synchronization and emergency module files, which means that uploading the files here means the project integration together.
+
+# File structure: 
+- [yolo5v](yolov5) In this folder, all the files are needed for the emergency module, for the ability to detect.
