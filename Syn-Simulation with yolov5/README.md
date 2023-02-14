@@ -17,7 +17,7 @@ Simply put the `trafficSimulator` folder in the same path as your file, Then use
 
 # File structure: 
 - [yolo5v](yolov5) In this folder, all the files are needed for the emergency module, for the ability to detect.
-- [traffic Simulator project] In this folder, all files required to run the traffic simulation environment in the synchronization module.
+- [traffic Simulator project](traffic Simulator project) In this folder, all files required to run the traffic simulation environment in the synchronization module.
 
 ## Documentation
 
