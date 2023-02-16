@@ -1,4 +1,3 @@
-from .curve import *
 from .vehicle import *
 from .road import *
 from .simulation import *
