@@ -4,21 +4,13 @@ import logging
 import threading
 from typing import Dict
 from collections import defaultdict
-
 import pygame
 from pygame import gfxdraw
 import numpy as np
-
 from trafficSimulator.config import *
-
-
 from yolov5.detect import DetectEmergency
 from yolov5.utils.general import check_requirements
-
-RECORDS_FILE_NAME = f"simulation_data_{time.time()}.csv"
-
-#import os
-#os.chdir("yolov5") 
+#RECORDS_FILE_NAME = f"simulation_data_{time.time()}.csv"
 
 class Window:
     def __init__(self, sim, config={}):
@@ -38,7 +30,7 @@ class Window:
         #   - traffic-light-count-H1-0:
 
         # write the header of the CSV file, We must know how many columns we have from this point
-        self.csv_header_list = ['time_s', 'frame', 'system_level_vehicle_count']
+        """self.csv_header_list = ['time_s', 'frame', 'system_level_vehicle_count']
         for road_info in RoadsNames:
             self.csv_header_list.append(str(road_info.name))
 
@@ -55,7 +47,7 @@ class Window:
         self.logger.info(
             f"len(self.csv_header_list)={len(self.csv_header_list)}, self.csv_header_list={self.csv_header_list}")
         # a dictionary to collect a data record for each round.
-        self.records = defaultdict(int)
+        self.records = defaultdict(int)"""
 
         self.value = 0  # vehicle is normal
 
@@ -101,10 +93,10 @@ class Window:
             #self.logger.debug("Sending Out Signal Detected Emergency Vehicle")
             
             detected = DetectEmergency (
-            weights=  'best.pt' ,
+            weights=  'best.pt' , #/ model of emernegency
             conf= 0.5  ,
             img_size=  (416,416),
-            source=  'test2.jpg'
+            source=  'TestSet'
             )
             opt = detected.parse_opt()
 
@@ -112,15 +104,11 @@ class Window:
 
             detected.run( **vars(opt))
 
-            print (detected.current_detected)
+            self.logger.debug(f"detected.current_detected")
             if detected.current_detected:
                 self.value = 99  # vehicle is emergency
             
-            time.sleep(10)    # Every 10 second detect vehicle is emergency  
-            
-            
-
-          
+            time.sleep(15)    # Every 15 second detect vehicle is emergency  
 
     def loop(self, loop=None):
         """Shows a window visualizing the simulation and runs the loop function."""
@@ -394,9 +382,9 @@ class Window:
         """
         A method to draw more than one vehicle.
         """
-        i = 0 
+        i = 0
 
-        self.records["system_level_vehicle_count"] = 0
+        #self.records["system_level_vehicle_count"] = 0
 
         for segment_id, road in enumerate(self.sim.roads, start=0):
             #self.logger.debug(f"segment_id={segment_id}, road={road}, road.vehicles={road.vehicles}")
@@ -409,27 +397,65 @@ class Window:
             assert road_id is not None
 
             # add the number of vehicle in a segment to its road id.
-            self.records[road_id] += len(road.vehicles)
+            #self.records[road_id] += len(road.vehicles)
 
             # count  vehicle in system
-            self.records["system_level_vehicle_count"] += len(road.vehicles)
+            #self.records["system_level_vehicle_count"] += len(road.vehicles)
 
             #self.logger.debug(f"self.records={self.records}")
 
             for vehicle in road.vehicles:
-                # i = 0 mean vehicle go from left to right                                     
-                if (self.value == 99 and i in [0,2,7,13,16]  and not vehicle.isEmergency) :  # i=10 mean go from right to left
+                if (self.value == 99 and i in [0,2,7,13,16] and not vehicle.isEmergency):
                     vehicle.isEmergency = True
                     self.value = 0    
                 else:
                     self.value = 0                    
                 self.draw_vehicle(vehicle, road )
-
-         
-
             i += 1
 
-    
+    def traffic_Signal_Thread (self, road):
+        self.logger.debug(f"starting traffic signal thread. Road={road}")
+        if not  road.traffic_signal.current_state :
+            while road.traffic_signal.timerRed > 0:
+                time.sleep(1)           
+                road.traffic_signal.timerRed -= 1   
+            road.traffic_signal.timerRed = 0
+        else:
+            road.traffic_signal.timerRed = 0
+            while road.traffic_signal.timerGreen > 0:
+                time.sleep(1)
+                road.traffic_signal.timerGreen -= 1
+                # road.traffic_signal.unstop()
+            # road.traffic_signal.stop()
+            road.traffic_signal.timerGreen  = road.traffic_signal.LightGreen
+            road.traffic_signal.timerRed = road.traffic_signal.LightRed
+        self.logger.debug(f"ending traffic signal thread. Road={road}")
+
+    # Traffic signal Color..
+    def traffic_Signal_Thread2 (self, signals):
+        self.logger.debug(f"starting traffic signal thread 2! Road={signals}")
+        # if not signals.current_state :  #RED = 5
+        while signals.timerRed > 0:
+            time.sleep(1)          
+            signals.timerRed -= 1
+            signals.stop()
+
+        signals.timerRed = 0
+        # signals.unstop()
+        # signals.timerRed =signals.LightRed
+        # signals.timerGreen  = signals.LightGreen
+
+        # else :  #GREEN = 30
+        # signals.timerRed = 0
+        while signals.timerGreen > 0:
+            time.sleep(1)
+            signals.timerGreen -= 1
+            # signals.unstop()
+        # signals.stop()
+        signals.timerRed = signals.LightRed
+        signals.timerGreen  = signals.LightGreen
+        self.logger.debug(f"ending traffic signal thread 2! Road={signals}")
+
     def draw_signals(self):
         #self.logger.debug("Refresh the signals? ...")
 
@@ -460,32 +486,23 @@ class Window:
                         (1, 3),
                         cos=road.angle_cos, sin=road.angle_sin,
                         color=color)
-                  
-                  
-                    # self.logger.debug(f"selected road={road}, position={position}")
-                    # self.logger.debug(f"index={i}, road_id_in_signal={signal.roads_ids[i]}")
-                    # self.logger.debug(f"signal.idx={signal.current_cycle_index}")
 
                     # collecting signal data for analysis
-                    road_id = None
+                    """ road_id = None
                     for road_info in RoadsNames:
                         if signal.roads_ids[i] in road_info.value:
                             road_id = road_info.name
                     traffic_signal_name = f"{road_id}-{signal.roads_ids[i]}"
 
-
-                    self.records[f"traffic-light-status-{traffic_signal_name}"] = "G" if signal.current_cycle[i] else "R"
+                    self.records[f"traffic-light-status-{traffic_signal_name}"] = "GREEN" if signal.current_cycle[i] else "RED"
                     self.records[f"traffic-light-count-{traffic_signal_name}"] = 0 if signal.current_cycle[i] else len(road.vehicles)
-                    #self.logger.debug(f"Signal={signal.current_cycle[i]}, has current state={signal.current_cycle[i]}")
-
-
-
+                    self.logger.debug(f"Signal={signal}, has current state={signal.current_cycle[i]}") """
 
     def draw_status(self):
-        # self.logger.debug("Updating status ...")
-        # self.logger.debug(f"self.sim.t={self.sim.t}, self.sim.frame_count={self.sim.frame_count}")
+        """ self.logger.debug("Updating status ...")
+        self.logger.debug(f"self.sim.t={self.sim.t}, self.sim.frame_count={self.sim.frame_count}")
         self.records['time_s'] = round(self.sim.t, 2)
-        self.records['frame'] = int(self.sim.frame_count)
+        self.records['frame'] = int(self.sim.frame_count) """
 
         text_fps = self.text_font.render(f't={self.sim.t:.5}', False, (0, 0, 0))
         text_frc = self.text_font.render(f'n={self.sim.frame_count}', False, (0, 0, 0))
@@ -493,7 +510,7 @@ class Window:
         self.screen.blit(text_fps, (0, 0))
         self.screen.blit(text_frc, (100, 0))
 
-        self.write_record_to_existing_csv_file()
+        #self.write_record_to_existing_csv_file()
 
     def draw(self ):
         # Fill background
@@ -511,18 +528,18 @@ class Window:
         # Draw status info
         self.draw_status()
 
-    def write_record_to_existing_csv_file(self):
+    """ def write_record_to_existing_csv_file(self):
 
         # TODO: Can we collect all the data here and not in each function?
         #   This will guarantee that the data is consistent! Either way is fine for the project!
-        #self.logger.info(f"len(self.records)={len(self.records)}, self.records={self.records}")
+        self.logger.info(f"len(self.records)={len(self.records)}, self.records={self.records}")
         record = []
         for header in self.csv_header_list:
             record.append(str(self.records.get(header, "empty")))
 
         with open(RECORDS_FILE_NAME, 'a') as records_file:
             records_file.write("\n"+",".join(record))
-        #self.logger.info(f"len(self.csv_header_list)={len(self.csv_header_list)}, self.csv_header_list={self.csv_header_list}")
-        #self.logger.info(f"len(record)={len(record)}, record={record}")
+        self.logger.info(f"len(self.csv_header_list)={len(self.csv_header_list)}, self.csv_header_list={self.csv_header_list}")
+        self.logger.info(f"len(record)={len(record)}, record={record}")
 
-        self.records = defaultdict(int)
+        self.records = defaultdict(int) """
